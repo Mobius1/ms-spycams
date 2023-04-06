@@ -14,7 +14,7 @@
 
 ## Usage
 * Use the `spycam` item from your inventory to deploy a new spy camera
-* USe the `spycam_tablet` item to connect to and control your deployed spy camera(s)
+* Use the `spycam_tablet` item to connect to and control your deployed spy camera(s)
 
 ## Contributing
-* Pull requests are welcomed
+* Pull requests are welcome
