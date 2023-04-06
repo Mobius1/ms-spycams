@@ -1,5 +1,5 @@
 # ms-spycams
- Useable spy cameras for QBCore
+ Deployable spy cameras for QBCore
 
 ## Dependencies
 * [qb-core](https://github.com/qbcore-framework/qb-core)
