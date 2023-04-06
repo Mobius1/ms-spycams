@@ -3,7 +3,8 @@ game 'gta5'
 lua54 'yes'
 
 author 'Mobius1'
-description 'Useable spy cameras for QBCore'
+description 'Deployable spy cameras for QBCore'
+version '0.0.1'
 
 shared_scripts {
     '@qb-core/shared/locale.lua',
