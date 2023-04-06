@@ -15,6 +15,7 @@
 ## Usage
 * Use the `spycam` item from your inventory to deploy a new spy camera
 * Use the `spycam_tablet` item to connect to and control your deployed spy camera(s)
+* Retrieve a spy camera by targeting it
 
 ## Contributing
 * Pull requests are welcome
