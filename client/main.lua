@@ -591,17 +591,3 @@ AddEventHandler('onResourceStop', function(res)
     if res ~= GetCurrentResourceName() then return end
     Spycam.Disconnect()
 end)
-
-RegisterCommand('spycam:dev', function(_, args)
-    local ped = PlayerPedId()
-    local animDict = args[1]
-    local animName = args[2]
-    Streaming.RequestAnimDict(animDict)
-    TaskPlayAnim(ped, animDict, animName, 8.0, 8.0, 3000, 1, 1.0, false, false, false)
-    Wait(math.floor(GetAnimDuration(animDict, animName)*1000))
-    ClearPedTasks(ped)
-
-    -- weapons@projectile@sticky_bomb
-    -- plant_vertical
-    -- plant_floor
-end)
