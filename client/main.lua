@@ -28,22 +28,6 @@ local Streaming = {}
 local Scaleform = {}
 local Raycast = {}
 
-local objects = GetGamePool('CObject')
-local hashes = {
-    [joaat('ms_prop_spycam')] = true,
-    [joaat('prop_cs_tablet')] = true,
-}
-
-for i = 1, #objects do
-    local hash = GetEntityModel(objects[i])
-
-    if hashes[hash] then
-        SetEntityAsMissionEntity(objects[i], true, true)
-        DetachEntity(objects[i])
-        DeleteEntity(objects[i])
-    end
-end
-
 function Spycam.Add(entity, coords, rotation, onFloor)
     QBCore.Functions.TriggerCallback('spycams:server:canPlace', function(canPlace)
         if canPlace then
