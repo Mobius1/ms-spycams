@@ -117,7 +117,7 @@ function Spycam.StartPlacement()
     if Spycam.entity then return end
 
     CreateThread(function()
-        local modelHash = joaat('ms_prop_spycam')
+        local modelHash = joaat('prop_spycam')
         local valid = false
         local player = PlayerPedId()
         local keys = Config.Controls.place
