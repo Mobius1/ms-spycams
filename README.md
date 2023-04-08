@@ -20,7 +20,7 @@
 * Use the `spycam_tablet` item to connect to and control your deployed spy camera(s)
 * Retrieve a spy camera by targeting it
 
-If you don't want to utilise the `spycam_tablet` item to connect to the deployed spy cameras, you can either use the command `spycams:connect` or ustilse the following exports from your scripts:
+If you don't want to utilise the `spycam_tablet` item to connect to the deployed spy cameras, you can either use the command `spycams:connect` or utilise the following exports from your scripts:
 
 * `exports['ms-spycams']:Connect()` - Connects to deployed spy cameras
 * `exports['ms-spycams']:Disconnect()` - Disconnects from deployed spy cameras
