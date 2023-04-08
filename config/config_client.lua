@@ -3,12 +3,14 @@ Config = {}
 -- Placement config
 Config.MaxPlaceHeight   = 0.6               -- Maximum allowed height above player in meters
 Config.MaxPlaceDistance = 10.0              -- Maximum placement distance away from player in meters
-Config.PlaceOnFloor     = true              -- Whether to allow spycams to be placed on the floor / horizontal surfaces
-Config.PlaceOnObjects   = true              -- Whether to allow spycams to be placed on objects
+Config.PlaceOnFloor     = true              -- Allows spycams to be placed on the floor / horizontal surfaces
+Config.PlaceOnObjects   = true              -- Allows spycams to be placed on objects
+Config.DrawOutline      = true              -- Draw outline during spy cam placement
 
 -- Camera config
-Config.ScreenEffect     = "CAMERA_BW"       -- Screen effect when viewing the camera
-Config.SignalDistance   = 50                -- Maximum distance in meters before signal loss occurs
+Config.ScreenEffect     = "heliGunCam"      -- Screen effect when viewing the camera
+Config.EffectStrength   = 1.0               -- The strenght of the ScreenEffect between 0.0 and 1.0
+Config.SignalDistance   = 100               -- Maximum distance in meters before signal loss occurs
 Config.MaxRotationX     = 60.0              -- Maximum camera rotation on the x axis
 Config.MaxRotationZ     = 60.0              -- Maximum camera rotation on the z axis
 Config.DefaultFOV       = 80.0              -- The default FOV of the camera

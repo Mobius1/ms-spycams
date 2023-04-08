@@ -3,12 +3,9 @@ local glm = require("glm")
 
 -- Cache
 local vec3 = vec3
-local vec4 = vec4
 local quat = quat
 local glm_abs = glm.abs
 local glm_deg = glm.deg
-local glm_dot = glm.dot
-local glm_rad = glm.rad
 local glm_sign = glm.sign
 local glm_approx = glm.approx
 local glm_up = glm.up()
@@ -41,8 +38,11 @@ function Spycam.Add(entity, coords, rotation, onFloor)
             SetEntityRotation(entity, rotation.x, rotation.y, rotation.z, 4)
             FreezeEntityPosition(entity, true)
             SetEntityCollision(entity, true, true)
-            SetEntityDrawOutline(entity, false)
             SetEntityAlpha(entity, 0)
+
+            if Config.DrawOutline then
+                SetEntityDrawOutline(entity, false)
+            end
         
             Streaming.RequestAnimDict(animDict)
         
@@ -125,9 +125,12 @@ function Spycam.StartPlacement()
 
         Streaming.RequestModel(modelHash)
         currentObject = CreateObject(modelHash, GetEntityCoords(player), true, true, true)
-        SetEntityDrawOutline(currentObject, true)
-        SetEntityDrawOutlineShader(1)
         SetEntityCollision(currentObject, false, false)
+
+        if Config.DrawOutline then
+            SetEntityDrawOutline(currentObject, true)
+            SetEntityDrawOutlineShader(1)
+        end            
 
         placing = true
 
@@ -158,21 +161,16 @@ function Spycam.StartPlacement()
                     (IsEntityAnObject(entity) and not Config.PlaceOnObjects) or 
                     (isHorizontal and not Config.PlaceOnFloor)
 
-
-        
-                    local color = { r = 255, g = 255, b = 255, a = 255 }
-
-                    if invalidSurface then
-                        color.g = 0
-                        color.b = 0
-                    end
-
                     -- Limit height
                     if coords.z > pcoords.z + Config.MaxPlaceHeight then
                         coords = vec3(coords.x, coords.y, pcoords.z + Config.MaxPlaceHeight)
                     end
 
-                    SetEntityDrawOutlineColor(color.r, color.g, color.b, color.a)
+                    if Config.DrawOutline then
+                        local color = { r = 255, g = invalidSurface and 0 or 255, b = invalidSurface and 0 or 255, a = 255 }
+                        SetEntityDrawOutlineColor(color.r, color.g, color.b, color.a)
+                    end
+
                     SetEntityCoordsNoOffset(currentObject, coords.x, coords.y, coords.z)
                     SetEntityRotation(currentObject, rotation.x, rotation.y, rotation.z, 4)
 
@@ -241,14 +239,30 @@ function Spycam.SelfDestruct(currentIndex, currentCam)
     QBCore.Functions.Notify(Lang:t('general.destroy', { time = Config.SelfDestructTime }), 'error')
 
     SetTimeout(Config.SelfDestructTime * 1000, function()
+        currentCam.destroyed = true
+
         QBCore.Functions.Notify(Lang:t('general.destroyed'), 'success')
         TriggerServerEvent('spycams:server:destroyed', currentCam.coords)
-
-        Spycam.Remove(currentCam.entity)
         TriggerServerEvent('spycams:server:removed', true)
 
-        Spycam.Disconnect()
-        Spycam.activeIndex = 1
+        if currentIndex == Spycam.activeIndex then
+            SetTimecycleModifier("CAMERA_secuirity_FUZZ")
+            SetTimecycleModifierStrength(1.0)
+            SetExtraTimecycleModifier("NG_blackout")
+            SetExtraTimecycleModifierStrength(1.0)
+        end 
+
+        Wait(3000)
+
+        Spycam.Remove(currentCam.entity)
+
+        if #ActiveCams == 0 then
+            Spycam.Disconnect()
+            Spycam.activeIndex = 1
+        else
+            Spycam.activeIndex = 1
+            Camera.Activate()
+        end
     end)
 end
 
@@ -300,7 +314,7 @@ function Camera.Activate()
     ClearTimecycleModifier()
     ClearExtraTimecycleModifier()
 
-    if dist > Config.SignalDistance then
+    if dist > Config.SignalDistance or currentCam.destroyed then
         currentCam.inRange = false
         SetTimecycleModifier("CAMERA_secuirity_FUZZ")
         SetTimecycleModifierStrength(1.0)
@@ -308,7 +322,8 @@ function Camera.Activate()
         SetExtraTimecycleModifierStrength(1.0)
     else
         currentCam.inRange = true
-        SetTimecycleModifier(Config.ScreenEffect)                    
+        SetTimecycleModifier(Config.ScreenEffect)
+        SetTimecycleModifierStrength(Config.EffectStrength)          
     end
 end
 
@@ -507,6 +522,9 @@ function Raycast.RotationToDirection(rotation)
     )
 end
 
+
+-- STREAMING
+
 function Streaming.RequestAnimDict(dict)
     if HasAnimDictLoaded(dict) then return end
     RequestAnimDict(dict)
@@ -530,6 +548,9 @@ function Streaming.RequestPtfx(ptfx)
         Wait(1)
     end
 end
+
+
+-- SCALEFORM
 
 function Scaleform.SetInstructionalButtons(data)
     if Scaleform.Buttons then
@@ -583,12 +604,23 @@ function Scaleform.SetButtonMessage(text)
     EndTextCommandScaleformString()
 end
 
+
+-- EVENT HANDLERS
+
+RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
+    TriggerEvent('chat:addSuggestion', '/spycams:connect', 'Connect to deployed spy cameras', {})
+end)
+
 RegisterNetEvent('spycams:client:place', function()
     Spycam.StartPlacement()
 end)
 
 RegisterNetEvent('spycams:client:connect', function()
     Spycam.Connect()
+end)
+
+RegisterNetEvent('spycams:client:diconnect', function()
+    Spycam.Disconnect()
 end)
 
 RegisterNetEvent('spycams:client:destroyed', function(coords)
@@ -609,3 +641,26 @@ AddEventHandler('onResourceStop', function(res)
     if res ~= GetCurrentResourceName() then return end
     Spycam.Disconnect()
 end)
+
+
+-- COMMANDS
+
+RegisterCommand('spycams:connect', function()
+    Spycam.Connect()
+end)
+
+RegisterCommand('spycams:disconnect', function()
+    Spycam.Disconnect()
+end)
+
+
+-- EXPORTS
+
+exports('Connect', function()
+    return Spycam.Connect()
+end)
+
+exports('Disconnect', function()
+    return Spycam.Disconnect()
+end)
+

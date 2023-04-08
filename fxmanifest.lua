@@ -4,7 +4,7 @@ lua54 'yes'
 
 author 'Mobius1'
 description 'Deployable spy cameras for QBCore'
-version '0.1.0'
+version '0.2.0'
 
 shared_scripts {
     '@qb-core/shared/locale.lua',
