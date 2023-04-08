@@ -1,3 +1,18 @@
+function DrawMessage(x, y, scale, r, g, b, a, text)
+    SetTextFont(2)
+    SetTextProportional(0)
+    SetTextScale(scale, scale)
+    SetTextColour(r, g, b, a)
+    SetTextJustification(0)
+    SetTextDropShadow(0, 0, 0, 0, 255)
+    SetTextEdge(2, 0, 0, 0, 255)
+    SetTextDropShadow()
+    SetTextOutline()
+    SetTextEntry('STRING')
+    AddTextComponentString(text)
+    DrawText(x, y)
+end
+
 function orderedIndex(t)
     local orderedIndex = {}
     for key in pairs(t) do

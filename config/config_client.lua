@@ -8,6 +8,7 @@ Config.PlaceOnObjects   = true              -- Whether to allow spycams to be pl
 
 -- Camera config
 Config.ScreenEffect     = "CAMERA_BW"       -- Screen effect when viewing the camera
+Config.SignalDistance   = 50                -- Maximum distance in meters before signal loss occurs
 Config.MaxRotationX     = 60.0              -- Maximum camera rotation on the x axis
 Config.MaxRotationZ     = 60.0              -- Maximum camera rotation on the z axis
 Config.DefaultFOV       = 80.0              -- The default FOV of the camera
@@ -49,7 +50,7 @@ end
 
 -- Callback fired when exiting the camera view
 Config.OnExitCam = function()
-    
+
 end
 
 -- List of material hashes a player can't place a spycam on

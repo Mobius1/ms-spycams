@@ -17,11 +17,13 @@ local Translations = {
         placed        = "You have the maximum number of spy cameras deployed",
         missing       = "You don't have any spy cameras deployed",
         invalid       = "Invalid placement",
+        range         = "Camera out of range - cannot send self-destruct signal",
     },
 
     general = {
         destroy     = "Spy camera will self-destruct in %{time} seconds",
         destroyed   = "Spy camera destroyed",
+        nosignal    = "NO SIGNAL",
     }
 }
 
