@@ -17,5 +17,10 @@
 * Use the `spycam_tablet` item to connect to and control your deployed spy camera(s)
 * Retrieve a spy camera by targeting it
 
+If you don't want to utilise the `spycam_tablet` item, you can trigger the following events:
+
+* 'spycams:client:connect' - connects to the spy cameras (if any are deployed)
+* 'spycams:client:disconnect' - disconnects from the spy cameras
+
 ## Contributing
 * Pull requests are welcome
