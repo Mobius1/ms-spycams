@@ -1,5 +1,10 @@
 Config = {}
 
+-- Targeting
+Config.TargetLib        = 'ox' -- 'ox' or 'qb'
+Config.TargetDistance   = 2.5
+Config.TargetIcon       = 'fa-solid fa-hand'
+
 -- Placement config
 Config.MaxPlaceHeight   = 0.6               -- Maximum allowed height above player in meters
 Config.MaxPlaceDistance = 10.0              -- Maximum placement distance away from player in meters
@@ -52,7 +57,7 @@ end
 
 -- Callback fired when exiting the camera view
 Config.OnExitCam = function()
-
+    
 end
 
 -- List of material hashes a player can't place a spycam on

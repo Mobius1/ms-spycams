@@ -59,14 +59,29 @@ function Spycam.Add(entity, coords, rotation, onFloor)
             ResetEntityAlpha(entity)
             ClearPedTasks(ped)
 
-            exports.ox_target:addLocalEntity({ entity }, {
-                {
-                    name = 'spycams:retrieve',
-                    event = "spycams:client:interact",
-                    icon = "fa-solid fa-hand",
-                    label = "Retrieve",        
-                }        
-            })
+            if Config.TargetLib == 'ox' then
+                exports.ox_target:addLocalEntity({ entity }, {
+                    {
+                        name = 'spycams:retrieve',
+                        event = "spycams:client:interact",
+                        icon = Config.TargetIcon,
+                        label = Lang:t('target.label'),  
+                        distance = Config.TargetDistance      
+                    }        
+                })
+            elseif Config.TargetLib == 'qb' then
+                exports['qb-target']:AddTargetEntity(entity, {
+                    options = {
+                        {
+                            type = "client",
+                            event = "spycams:client:interact",
+                            icon = Config.TargetIcon,
+                            label = Lang:t('target.label')
+                        },
+                    },
+                    distance = Config.TargetDistance
+                })
+            end
 
             local rotation = GetEntityRotation(entity)
             local coords = GetOffsetFromEntityInWorldCoords(entity, 0.0, 0.0, 0.1)
@@ -93,7 +108,11 @@ function Spycam.Remove(entity)
         local cam = ActiveCams[i]
 
         if cam.entity == entity then
-            exports.ox_target:removeLocalEntity({ cam.entity })
+            if Config.TargetLib == 'ox' then
+                exports.ox_target:removeLocalEntity({ cam.entity })
+            elseif Config.TargetLib == 'qb' then
+                exports['qb-target']:RemoveTargetEntity(cam.entity)
+            end
             SetEntityAsMissionEntity(cam.entity, true, true)
             DeleteEntity(cam.entity)
             table.remove(ActiveCams, i)
@@ -176,7 +195,7 @@ function Spycam.StartPlacement()
 
                     if IsDisabledControlJustPressed(0, keys.place.button) then
                         if invalidSurface then
-                            QBCore.Functions.Notify(Lang:t('error_invalid'), 'error', 7500)
+                            QBCore.Functions.Notify(Lang:t('errors.invalid'), 'error', 7500)
                         else
                             placing = false
                             Spycam.Add(currentObject, coords, rotation, isHorizontal)

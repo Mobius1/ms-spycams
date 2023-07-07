@@ -1,4 +1,8 @@
 local Translations = {
+    target = {
+        label = "Retrieve"
+    },
+    
     controls = {
         cancel      = "Cancel",
         place       = "Place Spycam",
