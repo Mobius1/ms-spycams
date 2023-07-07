@@ -25,4 +25,5 @@ client_scripts {
 dependencies {
     'qb-core',
     'ox_target',
+    -- 'qb-target',
 }
