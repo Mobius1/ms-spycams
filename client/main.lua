@@ -312,7 +312,7 @@ function Camera.Activate()
     -- We can do this with the last two params of CreateCamWithParams, but they're undocumented so we'll do it here for now
     SetCamRot(Spycam.Cam, currentCam.currentRotation.x, currentCam.currentRotation.y, currentCam.currentRotation.z, 2)
 
-    -- Load the area around the cam others we'll see low quality LODs
+    -- Load the area around the cam otherwise we'll see low quality LODs
     SetFocusPosAndVel(currentCam.coords.x, currentCam.coords.y, currentCam.coords.z, 20.0, 20.0, 20.0)
 
     if currentCam.mode == 'normal' then
