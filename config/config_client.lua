@@ -14,7 +14,7 @@ Config.DrawOutline      = true              -- Draw outline during spy cam place
 
 -- Camera config
 Config.ScreenEffect     = "heliGunCam"      -- Screen effect when viewing the camera
-Config.EffectStrength   = 1.0               -- The strenght of the ScreenEffect between 0.0 and 1.0
+Config.EffectStrength   = 1.0               -- The strength of the ScreenEffect between 0.0 and 1.0
 Config.SignalDistance   = 100               -- Maximum distance in meters before signal loss occurs
 Config.MaxRotationX     = 60.0              -- Maximum camera rotation on the x axis
 Config.MaxRotationZ     = 60.0              -- Maximum camera rotation on the z axis
