@@ -4,7 +4,7 @@ lua54 'yes'
 
 author 'Mobius1'
 description 'Deployable spy cameras for QBCore'
-version '0.2.0'
+version '0.3.0'
 
 shared_scripts {
     '@qb-core/shared/locale.lua',
@@ -25,5 +25,4 @@ client_scripts {
 dependencies {
     'qb-core',
     'ox_target',
-    -- 'qb-target',
 }

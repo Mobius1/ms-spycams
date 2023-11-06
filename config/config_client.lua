@@ -1,20 +1,23 @@
 Config = {}
 
+Config.Model            = 'prop_spycam'     -- The spycam model
+
 -- Targeting
-Config.TargetLib        = 'ox' -- 'ox' or 'qb'
+Config.TargetLib        = 'ox'              -- 'ox' or 'qb'
 Config.TargetDistance   = 2.5
 Config.TargetIcon       = 'fa-solid fa-hand'
 
 -- Placement config
-Config.MaxPlaceHeight   = 0.6               -- Maximum allowed height above player in meters
+Config.MaxPlaceHeight   = 2.6               -- Maximum allowed height above player in meters
 Config.MaxPlaceDistance = 10.0              -- Maximum placement distance away from player in meters
+Config.SurfaceOffset    = 0.01              -- Offset from surface
 Config.PlaceOnFloor     = true              -- Allows spycams to be placed on the floor / horizontal surfaces
 Config.PlaceOnObjects   = true              -- Allows spycams to be placed on objects
 Config.DrawOutline      = true              -- Draw outline during spy cam placement
 
 -- Camera config
 Config.ScreenEffect     = "heliGunCam"      -- Screen effect when viewing the camera
-Config.EffectStrength   = 1.0               -- The strength of the ScreenEffect between 0.0 and 1.0
+Config.EffectStrength   = 1.0               -- The strenght of the ScreenEffect between 0.0 and 1.0
 Config.SignalDistance   = 100               -- Maximum distance in meters before signal loss occurs
 Config.MaxRotationX     = 60.0              -- Maximum camera rotation on the x axis
 Config.MaxRotationZ     = 60.0              -- Maximum camera rotation on the z axis
@@ -52,12 +55,12 @@ Config.Controls = {
 
 -- Callback fired when entering the camera view
 Config.OnEnterCam = function()
-    
+    TriggerEvent('hud:client:DisableHud')
 end
 
 -- Callback fired when exiting the camera view
 Config.OnExitCam = function()
-    
+    TriggerEvent('hud:client:EnableHud')
 end
 
 -- List of material hashes a player can't place a spycam on

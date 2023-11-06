@@ -85,7 +85,7 @@ function Spycam.Add(entity, coords, rotation, onFloor)
 
             local rotation = GetEntityRotation(entity)
             local coords = GetOffsetFromEntityInWorldCoords(entity, 0.0, 0.0, 0.1)
-            local rot = { x = rotation.x + 90.0, y = rotation.y + 180.0, z = rotation.z }
+            local rot = { x = rotation.x, y = rotation.y, z = rotation.z }
             local netId = NetworkGetNetworkIdFromEntity(entity)
             
             ActiveCams[#ActiveCams + 1] = {
@@ -136,7 +136,7 @@ function Spycam.StartPlacement()
     if Spycam.entity then return end
 
     CreateThread(function()
-        local modelHash = joaat('prop_spycam')
+        local modelHash = joaat(Config.Model)
         local valid = false
         local player = PlayerPedId()
         local keys = Config.Controls.place
@@ -171,28 +171,34 @@ function Spycam.StartPlacement()
 
                 if hit ~= 0 then
                     norm = glm.normalize(norm)
-                    local _, rotation = Raycast.SurfaceNormalToRotation(norm)
-                    coords = coords + norm * 0.01
+
+                    -- Get the rotation from the surface normal
+                    local rotation = Raycast.SurfaceNormalToRotation(norm)
+
+                    -- Add a slight offset from the surface
+                    coords = coords + norm * Config.SurfaceOffset
                     
-                    local isHorizontal = rotation.y > -20.00 and rotation.y < 20.00
+                    local isHorizontal = norm.z > 0.95
                     local invalidSurface = Config.MaterialsBlacklist[material] or 
-                    IsEntityAVehicle(entity) or 
-                    (IsEntityAnObject(entity) and not Config.PlaceOnObjects) or 
-                    (isHorizontal and not Config.PlaceOnFloor)
+                                            IsEntityAVehicle(entity) or 
+                                            (IsEntityAnObject(entity) and not Config.PlaceOnObjects) or 
+                                            (isHorizontal and not Config.PlaceOnFloor)
 
                     -- Limit height
                     if coords.z > pcoords.z + Config.MaxPlaceHeight then
                         coords = vec3(coords.x, coords.y, pcoords.z + Config.MaxPlaceHeight)
                     end
 
+                    -- Draw outline if required
                     if Config.DrawOutline then
                         local color = { r = 255, g = invalidSurface and 0 or 255, b = invalidSurface and 0 or 255, a = 255 }
                         SetEntityDrawOutlineColor(color.r, color.g, color.b, color.a)
                     end
 
                     SetEntityCoordsNoOffset(currentObject, coords.x, coords.y, coords.z)
-                    SetEntityRotation(currentObject, rotation.x, rotation.y, rotation.z, 4)
+                    SetEntityRotation(currentObject, rotation.x, rotation.y, rotation.z + 180.0, 4)
 
+                    -- Place the spycam
                     if IsDisabledControlJustPressed(0, keys.place.button) then
                         if invalidSurface then
                             QBCore.Functions.Notify(Lang:t('errors.invalid'), 'error', 7500)
@@ -401,12 +407,12 @@ function Camera.Create()
                     local camMoving = false
                     if IsDisabledControlPressed(0, keys.moveup.button) then
                         camMoving = true
-                        currentCam.currentRotation.x = currentCam.currentRotation.x - Config.MoveStep
+                        currentCam.currentRotation.x = currentCam.currentRotation.x + Config.MoveStep
                     end
                 
                     if IsDisabledControlPressed(0, keys.movedown.button) then
                         camMoving = true
-                        currentCam.currentRotation.x = currentCam.currentRotation.x + Config.MoveStep
+                        currentCam.currentRotation.x = currentCam.currentRotation.x - Config.MoveStep
                     end
                 
                     if IsDisabledControlPressed(0, keys.moveleft.button) then
@@ -491,23 +497,21 @@ end
 --- Source: https://github.com/citizenfx/lua/blob/luaglm-dev/cfx/libs/scripts/examples/scripting_gta.lua
 function Raycast.SurfaceNormalToRotation(normal)
     local quat_eps = 1E-2
-    local surfaceFlip = quat(180.0, glm_forward)
+    local surfaceFlip = quat(-90, glm_right)
     local q = nil
+
     if glm_approx(glm_abs(normal.z), 1.0, quat_eps) then
         local camRot = GetFinalRenderedCamRot(2)
         local counterRotation = (glm_sign(normal.z) * -camRot.z) - 90.0
 
         q = glm.quatlookRotation(normal, glm_right)
         q = q * quat(counterRotation, glm_up)
-    elseif glm_approx(normal.y, 1.0, quat_eps) then
-        q = glm.quatlookRotation(normal, -glm_up)
-        surfaceFlip = quat(180.0, glm_right)
     else
         q = glm.quatlookRotation(normal, glm_up)
     end
 
     local euler = vec3(glm.extractEulerAngleYXZ(q * surfaceFlip))
-    return q,glm_deg(vec3(euler[2],euler[1],euler[3]))
+    return glm_deg(vec3(euler[2], euler[1], euler[3]))
 end
 
 function Raycast.RaycastFromCamera(player)
@@ -682,4 +686,3 @@ end)
 exports('Disconnect', function()
     return Spycam.Disconnect()
 end)
-
