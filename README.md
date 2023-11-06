@@ -14,6 +14,9 @@
 * Adjust `config/config_client.lua` and `config/config_server.lua` to you liking
 * Restart you server
 
+## Upgrading from v0.2.0
+The need for streaming a custom `prop_spycam` model was removed in v0.3.0 therefore you must delete the `stream` folder and it's contents otherwise the spycam will be rotated incorrectly!
+
 
 ## Usage
 * Use the `spycam` item from your inventory to deploy a new spy camera

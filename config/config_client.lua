@@ -55,12 +55,12 @@ Config.Controls = {
 
 -- Callback fired when entering the camera view
 Config.OnEnterCam = function()
-    TriggerEvent('hud:client:DisableHud')
+    --
 end
 
 -- Callback fired when exiting the camera view
 Config.OnExitCam = function()
-    TriggerEvent('hud:client:EnableHud')
+    --
 end
 
 -- List of material hashes a player can't place a spycam on
