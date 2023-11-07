@@ -84,7 +84,6 @@ function Spycam.Add(entity, coords, rotation, onFloor)
                 })
             end
 
-            local rotation = GetEntityRotation(entity)
             local netId = NetworkGetNetworkIdFromEntity(entity)
             
             ActiveCams[#ActiveCams + 1] = {
@@ -92,8 +91,8 @@ function Spycam.Add(entity, coords, rotation, onFloor)
                 coords = coords,
                 viewing = false,
                 mode = 'normal',
-                startRotation = rotation,
-                currentRotation = { x = rotation.x, y = rotation.y, z = rotation.z },
+                startRotation = rotation + vec3(0.0, 0.0, 180.0),
+                currentRotation = { x = rotation.x, y = rotation.y, z = rotation.z + 180.0 },
                 currentZoom = Config.DefaultFOV                
             }
 
@@ -203,7 +202,7 @@ function Spycam.StartPlacement()
                             QBCore.Functions.Notify(Lang:t('errors.invalid'), 'error', 7500)
                         else
                             placing = false
-                            Spycam.Add(currentObject, coords, rotation, isHorizontal)
+                            Spycam.Add(currentObject, coords, vec3(rotation.x, rotation.y, rotation.z + 180.0), isHorizontal)
                         end
                     end                  
                 end
