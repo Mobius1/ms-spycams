@@ -35,7 +35,7 @@ function Spycam.Add(entity, coords, rotation, onFloor)
             local animName = onFloor and 'plant_floor' or 'plant_vertical'
         
             SetEntityCoordsNoOffset(entity, coords.x, coords.y, coords.z)
-            SetEntityRotation(entity, rotation.x, rotation.y, rotation.z, 4)
+            SetEntityRotation(entity, rotation.x, rotation.y, rotation.z + 180.0, 4)
             FreezeEntityPosition(entity, true)
             SetEntityCollision(entity, true, true)
             SetEntityAlpha(entity, 0)
@@ -74,6 +74,7 @@ function Spycam.Add(entity, coords, rotation, onFloor)
                     options = {
                         {
                             type = "client",
+                            name = 'spycams:retrieve',
                             event = "spycams:client:interact",
                             icon = Config.TargetIcon,
                             label = Lang:t('target.label')
@@ -84,7 +85,6 @@ function Spycam.Add(entity, coords, rotation, onFloor)
             end
 
             local rotation = GetEntityRotation(entity)
-            local coords = GetOffsetFromEntityInWorldCoords(entity, 0.0, 0.0, 0.1)
             local rot = { x = rotation.x, y = rotation.y, z = rotation.z }
             local netId = NetworkGetNetworkIdFromEntity(entity)
             
@@ -93,8 +93,8 @@ function Spycam.Add(entity, coords, rotation, onFloor)
                 coords = coords,
                 viewing = false,
                 mode = 'normal',
-                startRotation = vec3(rot.x, rot.y, rot.z),
-                currentRotation = { x = rot.x, y = rot.y, z = rot.z },
+                startRotation = rotation,
+                currentRotation = { x = rotation.x, y = rotation.y, z = rotation.z },
                 currentZoom = Config.DefaultFOV                
             }
 
