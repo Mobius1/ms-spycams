@@ -85,7 +85,6 @@ function Spycam.Add(entity, coords, rotation, onFloor)
             end
 
             local rotation = GetEntityRotation(entity)
-            local rot = { x = rotation.x, y = rotation.y, z = rotation.z }
             local netId = NetworkGetNetworkIdFromEntity(entity)
             
             ActiveCams[#ActiveCams + 1] = {
