@@ -18,11 +18,12 @@ Config.PlaceOnObjects   = true              -- Allows spycams to be placed on ob
 Config.DrawOutline      = true              -- Draw outline during spy cam placement
 
 -- Camera
+Config.AllowRotation    = true              -- Enable the option to rotate the camera
 Config.ScreenEffect     = "heliGunCam"      -- Screen effect when viewing the camera
 Config.EffectStrength   = 1.0               -- The strenght of the ScreenEffect between 0.0 and 1.0
 Config.SignalDistance   = 100               -- Maximum distance in meters before signal loss occurs
-Config.MaxRotationX     = 60.0              -- Maximum camera rotation on the x axis
-Config.MaxRotationZ     = 60.0              -- Maximum camera rotation on the z axis
+Config.MaxRotationX     = 20.0              -- Maximum camera rotation on the x axis
+Config.MaxRotationZ     = 20.0              -- Maximum camera rotation on the z axis
 Config.DefaultFOV       = 80.0              -- The default FOV of the camera
 Config.MinFOV           = 10.0              -- Minimum allowed FOV of the camera
 Config.MaxFOV           = 80.0              -- Maximum allowed FOV of the camera
@@ -32,27 +33,33 @@ Config.SelfDestructTime = 5                 -- Time in seconds before spycam sel
 
 -- Controls
 Config.Controls = {
-    --!!!! DO NOT CHANGE THE TABLE KEYS UNLESS YOU KNOW WHAT YOU'RE DOING !!!!--
+    --!!!! DO NOT CHANGE THE TABLE KEYS !!!!--
 
     -- Placement controls
     ['place'] = {
-        ['cancel']  = { button = 25, label = Lang:t('controls.cancel') },
-        ['place']   = { button = 24, label = Lang:t('controls.place') }
+        ['cancel']  = { key = 25, enabled = true, label = Lang:t('controls.cancel') },
+        ['place']   = { key = 24, enabled = true, label = Lang:t('controls.place') }
     },
 
     -- Camera controls
     ['camera'] = {
-        ['disconnect']  = { button = 194,   label = Lang:t('controls.disconnect') },
-        ['destroy']     = { button = 73,    label = Lang:t('controls.destroy') },
-        ['mode']        = { button = 23,    label = Lang:t('controls.mode') },
-        ['zoomin']      = { button = 96,    label = Lang:t('controls.zoomin') },
-        ['zoomout']     = { button = 97,    label = Lang:t('controls.zoomout') },
-        ['moveright']   = { button = 35,    label = Lang:t('controls.moveright') },
-        ['movedown']    = { button = 33,    label = Lang:t('controls.moveright') },
-        ['moveleft']    = { button = 34,    label = Lang:t('controls.moveleft') },
-        ['moveup']      = { button = 32,    label = Lang:t('controls.moveup')},
+        ['disconnect']  = { key = 194,   enabled = true, label = Lang:t('controls.disconnect') },
+        ['destroy']     = { key = 73,    enabled = true, label = Lang:t('controls.destroy') },
+        ['mode']        = { key = 23,    enabled = true, label = Lang:t('controls.mode') },
+        ['zoomin']      = { key = 96,    enabled = true, label = Lang:t('controls.zoomin') },
+        ['zoomout']     = { key = 97,    enabled = true, label = Lang:t('controls.zoomout') },
+        ['moveright']   = { key = 35,    enabled = Config.AllowRotation, label = Lang:t('controls.moveright') },
+        ['movedown']    = { key = 33,    enabled = Config.AllowRotation, label = Lang:t('controls.movedown') },
+        ['moveleft']    = { key = 34,    enabled = Config.AllowRotation, label = Lang:t('controls.moveleft') },
+        ['moveup']      = { key = 32,    enabled = Config.AllowRotation, label = Lang:t('controls.moveup')},
+        ['next']        = { key = 175,    enabled = true, label = Lang:t('controls.next')},
+        ['prev']        = { key = 174,    enabled = true, label = Lang:t('controls.prev')},
     }    
 }
+
+Config.SendNotification = function(message, notificationType)
+    exports['qb-core']:GetCoreObject().Functions.Notify(message, notificationType)
+end
 
 -- Callback fired when entering the camera view
 Config.OnEnterCam = function()

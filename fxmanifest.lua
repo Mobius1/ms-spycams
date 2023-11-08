@@ -9,6 +9,7 @@ version '0.4.0'
 shared_scripts {
     '@qb-core/shared/locale.lua',
     'locales/en.lua',
+    'shared/utils.lua',
 }
 
 server_scripts {
@@ -19,7 +20,6 @@ server_scripts {
 
 client_scripts {
     'config/config_client.lua',
-    'client/utils.lua',
     'client/main.lua'
 }
 

@@ -89,6 +89,7 @@ function Spycam.Place(entity, coords, rotation)
             Spycam.Add(entity, coords, rotation, uuid)
 
             TriggerServerEvent('spycams:server:placed', uuid, coords, rotation, onFloor)
+            Config.SendNotification(Lang:t('notifications.placed'), 'info')
         end
     end)
 end
@@ -239,7 +240,7 @@ function Spycam.StartPlacement()
                     SetEntityRotation(currentObject, rotation.x, rotation.y, rotation.z, 4)
 
                     -- Place the spycam
-                    if IsDisabledControlJustPressed(0, keys.place.button) then
+                    if IsDisabledControlJustPressed(0, keys.place.key) then
                         if invalidSurface then
                             QBCore.Functions.Notify(Lang:t('errors.invalid'), 'error', 7500)
                         else
@@ -249,7 +250,7 @@ function Spycam.StartPlacement()
                     end                  
                 end
 
-                if IsDisabledControlJustPressed(0, keys.cancel.button) then
+                if IsDisabledControlJustPressed(0, keys.cancel.key) then
                     SetScaleformMovieAsNoLongerNeeded(Scaleform.Buttons)
                     SetEntityAsMissionEntity(currentObject, true, true)
                     DeleteEntity(currentObject)
@@ -394,6 +395,14 @@ function Camera.Activate()
     end
 end
 
+function Camera.IsControlPressed(control)
+    return IsDisabledControlPressed(0, control.key) and control.enabled
+end
+
+function Camera.IsControlJustPressed(control)
+    return IsDisabledControlJustPressed(0, control.key) and control.enabled
+end
+
 function Camera.Create()
     local keys = Config.Controls.camera
     local buttons = Scaleform.SetInstructionalButtons(keys)
@@ -410,13 +419,15 @@ function Camera.Create()
                 DisableAllControlActions(0)
 
                 -- Display instructional buttons
-                DrawScaleformMovieFullscreen(buttons, 255, 255, 255, 255, 0)
+                if not takingPhoto then
+                    DrawScaleformMovieFullscreen(buttons, 255, 255, 255, 255, 0)
+                end
 
                 if not currentCam.inRange then
                     DrawMessage(0.5, 0.5, 0.8, 255, 255, 255, 255, Lang:t('general.nosignal'))
                 end
 
-                if IsDisabledControlJustPressed(0, 174) then
+                if Camera.IsControlJustPressed(keys.prev) then
                     if Spycam.activeIndex > 1 then
                         Spycam.activeIndex = Spycam.activeIndex - 1
                     else
@@ -424,7 +435,7 @@ function Camera.Create()
                     end
 
                     Camera.Activate()
-                elseif IsDisabledControlJustPressed(0, 175) then
+                elseif Camera.IsControlJustPressed(keys.next) then
                     if Spycam.activeIndex < #ActiveCams then
                         Spycam.activeIndex = Spycam.activeIndex + 1
                     else
@@ -435,12 +446,12 @@ function Camera.Create()
                 end 
 
                 -- Exit the camera view
-                if IsDisabledControlJustPressed(0, keys.disconnect.button) then
+                if Camera.IsControlJustPressed(keys.disconnect)then
                     Spycam.Disconnect()
                 end
 
                 -- Self-destruct
-                if IsDisabledControlJustPressed(0, keys.destroy.button) then
+                if Camera.IsControlJustPressed(keys.destroy) then
                     Spycam.SelfDestruct(Spycam.activeIndex, currentCam)
                 end
 
@@ -448,39 +459,39 @@ function Camera.Create()
                     -- Camera movement controls
                     local camMoving = false
 
-                    if IsDisabledControlPressed(0, keys.moveup.button) then
+                    if Camera.IsControlPressed(keys.moveup) then
                         camMoving = true
                         currentCam.currentRotation.x = currentCam.currentRotation.x + Config.MoveStep
                     end
                 
-                    if IsDisabledControlPressed(0, keys.movedown.button) then
+                    if Camera.IsControlPressed(keys.movedown) then
                         camMoving = true
                         currentCam.currentRotation.x = currentCam.currentRotation.x - Config.MoveStep
                     end
                 
-                    if IsDisabledControlPressed(0, keys.moveleft.button) then
+                    if Camera.IsControlPressed(keys.moveleft) then
                         camMoving = true
                         currentCam.currentRotation.z = currentCam.currentRotation.z + Config.MoveStep
                     end
                 
-                    if IsDisabledControlPressed(0, keys.moveright.button) then
+                    if Camera.IsControlPressed(keys.moveright) then
                         camMoving = true
                         currentCam.currentRotation.z = currentCam.currentRotation.z - Config.MoveStep
-                    end           
+                    end      
 
                     -- Camera zoom controls
-                    if IsDisabledControlJustPressed(0, keys.zoomin.button) then
+                    if Camera.IsControlJustPressed(keys.zoomin) then
                         currentCam.currentZoom = currentCam.currentZoom - Config.ZoomStep
                         currentCam.currentZoom = math.max(currentCam.currentZoom, Config.MinFOV)
                         SetCamFov(Spycam.Cam, currentCam.currentZoom)
-                    elseif IsDisabledControlJustPressed(0, keys.zoomout.button) then
+                    elseif Camera.IsControlJustPressed(keys.zoomout) then
                         currentCam.currentZoom = currentCam.currentZoom + Config.ZoomStep
                         currentCam.currentZoom = math.min(currentCam.currentZoom, Config.MaxFOV)
                         SetCamFov(Spycam.Cam, currentCam.currentZoom)
-                    end
+                    end             
 
                     -- Camera vision mode controls
-                    if IsDisabledControlJustPressed(0, keys.mode.button) then
+                    if Camera.IsControlJustPressed(keys.mode) then
                         if currentCam.mode == 'normal' then
                             currentCam.mode = 'night'
                             SetNightvision(true)
@@ -639,8 +650,10 @@ function Scaleform.SetInstructionalButtons(data)
     local index = 0
 
     for id, btn in orderedPairs(data) do
-        Scaleform.AddInstuctionalButton(btn.label, btn.button, index)
-        index = index + 1
+        if btn.enabled then
+            Scaleform.AddInstuctionalButton(btn.label, btn.key, index)
+            index = index + 1
+        end
     end
 
     PushScaleformMovieFunction(Scaleform.Buttons, "DRAW_INSTRUCTIONAL_BUTTONS")
@@ -668,14 +681,6 @@ function Scaleform.SetButtonMessage(text)
     BeginTextCommandScaleformString("STRING")
     AddTextComponentScaleform(text)
     EndTextCommandScaleformString()
-end
-
-function generateUUID()
-    local template ='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
-    return string.gsub(template, '[xy]', function (c)
-        local v = (c == 'x') and math.random(0, 0xf) or math.random(8, 0xb)
-        return string.format('%x', v)
-    end)
 end
 
 
@@ -748,26 +753,4 @@ end)
 
 exports('Disconnect', function()
     return Spycam.Disconnect()
-end)
-
-
-RegisterCommand('spycams:clean', function()
-    local hashes = {
-        [joaat('prop_cs_tablet')] = true,
-        [joaat('prop_spycam')] = true
-    }
-
-    local objects = GetGamePool('CObject')
-    local hash = joaat('prop_spycam')
-    for i = 1, #objects do
-        if hashes[GetEntityModel(objects[i])] then
-            print(hashes[GetEntityModel(objects[i])])
-            SetEntityAsMissionEntity(objects[i], true, true)
-            DeleteEntity(objects[i])
-        end
-    end
-end)
-
-RegisterCommand('spycams:place', function()
-    Spycam.StartPlacement()
 end)

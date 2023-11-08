@@ -8,13 +8,15 @@ local Translations = {
         place       = "Place Spycam",
         disconnect  = "Disconnect",
         destroy     = "Self-destruct",
-        mode        = "Vision Mode",
+        mode        = "Mode",
         zoomin      = "Zoom In",
         zoomout     = "Zoom Out",
-        moveright   = "Move Right",
-        movedown    = "Move Down",
-        moveleft    = "Move Left",
-        moveup      = "Move Up",        
+        moveright   = "Right",
+        movedown    = "Down",
+        moveleft    = "Left",
+        moveup      = "Up",
+        prev        = "Previous Cam",
+        next        = "Next Cam",
     },
     
     errors = {
@@ -22,6 +24,10 @@ local Translations = {
         missing       = "You don't have any spy cameras deployed",
         invalid       = "Invalid placement",
         range         = "Camera out of range - cannot send self-destruct signal",
+    },
+
+    notifications = {
+        placed = 'Camera Placed'
     },
 
     general = {
