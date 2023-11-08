@@ -4,7 +4,8 @@
 
 ## Dependencies
 * [qb-core](https://github.com/qbcore-framework/qb-core)
-* [ox_target](https://github.com/overextended/ox_target)
+* [ox_mysql](https://github.com/overextended/oxmysql)
+* [ox_target](https://github.com/overextended/ox_target) or [qb-target](https://github.com/qbcore-framework/qb-target)
 
 
 ## Install
