@@ -29,6 +29,8 @@ If you don't want to utilise the `spycam_tablet` item to connect to the deployed
 * `exports['ms-spycams']:Connect()` - Connects to deployed spy cameras
 * `exports['ms-spycams']:Disconnect()` - Disconnects from deployed spy cameras
 
+## Planned Updates
+- [ ] Capture Photos
 
 ## Contributing
 * Pull requests are welcome
