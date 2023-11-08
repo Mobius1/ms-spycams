@@ -8,6 +8,7 @@
 
 
 ## Install
+* Import `spycams.sql` in to your database
 * Drag `ms-spycams` into your `resources` directory
 * Add `ensure ms-spycams` to your  `server.cfg` AFTER `qb-core`
 * The inventory images and items list are in the `INVENTORY` directory
