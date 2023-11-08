@@ -14,7 +14,6 @@ Config.MaxPlaceHeight   = 2.6               -- Maximum allowed height above play
 Config.MaxPlaceDistance = 10.0              -- Maximum placement distance away from player in meters
 Config.SurfaceOffset    = 0.01              -- Offset from surface
 Config.CamOffset        = -0.12             -- Camera offset from the prop to prevent it clipping through walls
-Config.PlaceOnFloor     = true              -- Allows spycams to be placed on the floor / horizontal surfaces
 Config.PlaceOnObjects   = true              -- Allows spycams to be placed on objects
 Config.DrawOutline      = true              -- Draw outline during spy cam placement
 
