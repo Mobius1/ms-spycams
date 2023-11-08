@@ -25,17 +25,43 @@ local Streaming = {}
 local Scaleform = {}
 local Raycast = {}
 
-function Spycam.Add(entity, coords, rotation, onFloor)
+function Spycam.LoadCameras()
+    local PlayerData = QBCore.Functions.GetPlayerData()
+
+    QBCore.Functions.TriggerCallback('spycams:server:getPlayerSpycams', function(cams)
+        if #cams > 0 then
+            local modelHash = joaat(Config.Model)
+            Streaming.RequestModel(modelHash)
+        
+            for i = 1, #cams do
+                local cam = cams[i]
+                local camEntity = CreateObject(modelHash, cam.coords, true, true, true)
+                
+                FreezeEntityPosition(camEntity, true)
+                SetEntityCoords(camEntity, cam.coords.x, cam.coords.y, cam.coords.z)
+                SetEntityRotation(camEntity, cam.rotation.x, cam.rotation.y, cam.rotation.z, 5)
+        
+                local rotation = GetEntityRotation(camEntity, 0)
+                
+                Spycam.EnableInteraction(camEntity, cam.uuid)
+                Spycam.Add(camEntity, cam.coords, rotation, cam.uuid)
+            end
+        end
+    end)
+end
+
+function Spycam.Place(entity, coords, rotation)
     QBCore.Functions.TriggerCallback('spycams:server:canPlace', function(canPlace)
         if canPlace then
             local ped = PlayerPedId()
             local pcoords = GetEntityCoords(ped)
+            local uuid = generateUUID()
         
             local animDict = 'weapons@projectile@sticky_bomb'
             local animName = onFloor and 'plant_floor' or 'plant_vertical'
         
-            SetEntityCoordsNoOffset(entity, coords.x, coords.y, coords.z)
-            SetEntityRotation(entity, rotation.x, rotation.y, rotation.z + 180.0, 4)
+            SetEntityCoords(entity, coords.x, coords.y, coords.z)
+            SetEntityRotation(entity, rotation.x, rotation.y, rotation.z, 5)
             FreezeEntityPosition(entity, true)
             SetEntityCollision(entity, true, true)
             SetEntityAlpha(entity, 0)
@@ -59,63 +85,79 @@ function Spycam.Add(entity, coords, rotation, onFloor)
             ResetEntityAlpha(entity)
             ClearPedTasks(ped)
 
-            if Config.TargetLib == 'ox' then
-                exports.ox_target:addLocalEntity({ entity }, {
-                    {
-                        name = 'spycams:retrieve',
-                        event = "spycams:client:interact",
-                        icon = Config.TargetIcon,
-                        label = Lang:t('target.label'),  
-                        distance = Config.TargetDistance      
-                    }        
-                })
-            elseif Config.TargetLib == 'qb' then
-                exports['qb-target']:AddTargetEntity(entity, {
-                    options = {
-                        {
-                            type = "client",
-                            name = 'spycams:retrieve',
-                            event = "spycams:client:interact",
-                            icon = Config.TargetIcon,
-                            label = Lang:t('target.label')
-                        },
-                    },
-                    distance = Config.TargetDistance
-                })
-            end
+            Spycam.EnableInteraction(entity, uuid)
+            Spycam.Add(entity, coords, rotation, uuid)
 
-            local netId = NetworkGetNetworkIdFromEntity(entity)
-            
-            ActiveCams[#ActiveCams + 1] = {
-                entity = entity,
-                coords = coords,
-                viewing = false,
-                mode = 'normal',
-                startRotation = rotation + vec3(0.0, 0.0, 180.0),
-                currentRotation = { x = rotation.x, y = rotation.y, z = rotation.z + 180.0 },
-                currentZoom = Config.DefaultFOV                
-            }
-
-            TriggerServerEvent('spycams:server:placed')
+            TriggerServerEvent('spycams:server:placed', uuid, coords, rotation, onFloor)
         end
     end)
 end
 
-function Spycam.Remove(entity)
+function Spycam.Add(entity, coords, rotation, uuid)
+    local netId = NetworkGetNetworkIdFromEntity(entity)
+            
+    ActiveCams[#ActiveCams + 1] = {
+        entity = entity,
+        coords = coords,
+        viewing = false,
+        mode = 'normal',
+        startRotation = rotation + vec3(0.0, 0.0, 180.0),
+        currentRotation = { x = rotation.x, y = rotation.y, z = rotation.z + 180.0 },
+        currentZoom = Config.DefaultFOV,
+        uuid = uuid            
+    }
+end
+
+function Spycam.EnableInteraction(entity, uuid)
+    if Config.TargetLib == 'ox' then
+        exports.ox_target:addLocalEntity({ entity }, {
+            {
+                name = 'spycams:retrieve',
+                event = "spycams:client:interact",
+                icon = Config.TargetIcon,
+                label = Lang:t('target.label'),  
+                distance = Config.TargetDistance,
+                uuid = uuid
+            }        
+        })
+    elseif Config.TargetLib == 'qb' then
+        exports['qb-target']:AddTargetEntity(entity, {
+            options = {
+                {
+                    type = "client",
+                    name = 'spycams:retrieve',
+                    event = "spycams:client:interact",
+                    icon = Config.TargetIcon,
+                    label = Lang:t('target.label'),
+                    uuid = uuid
+                },
+            },
+            distance = Config.TargetDistance
+        })
+    end
+end
+
+function Spycam.DisableInteraction(entity)
+    if Config.TargetLib == 'ox' then
+        exports.ox_target:removeLocalEntity({ entity })
+    elseif Config.TargetLib == 'qb' then
+        exports['qb-target']:RemoveTargetEntity(entity)
+    end
+end
+
+function Spycam.Remove(entity, uuid)
     for i = #ActiveCams, 1, -1 do
         local cam = ActiveCams[i]
+        if cam.uuid == uuid then
+            if DoesEntityExist(cam.entity) then
+                Spycam.DisableInteraction(cam.entity)
 
-        if cam.entity == entity then
-            if Config.TargetLib == 'ox' then
-                exports.ox_target:removeLocalEntity({ cam.entity })
-            elseif Config.TargetLib == 'qb' then
-                exports['qb-target']:RemoveTargetEntity(cam.entity)
+                SetEntityAsMissionEntity(cam.entity, true, true)
+                DeleteEntity(cam.entity)
+                table.remove(ActiveCams, i)
+                
+                break
             end
-            SetEntityAsMissionEntity(cam.entity, true, true)
-            DeleteEntity(cam.entity)
-            table.remove(ActiveCams, i)
-            
-            break
         end
     end
 
@@ -124,9 +166,9 @@ function Spycam.Remove(entity)
     end
 end
 
-function Spycam.Retrieve(entity)
-    Spycam.Remove(entity)
-    TriggerServerEvent('spycams:server:removed', false)
+function Spycam.Retrieve(entity, uuid)
+    Spycam.Remove(entity, uuid)
+    TriggerServerEvent('spycams:server:removed', uuid, false)
 end
 
 function Spycam.StartPlacement()
@@ -175,12 +217,12 @@ function Spycam.StartPlacement()
 
                     -- Add a slight offset from the surface
                     coords = coords + norm * Config.SurfaceOffset
-                    
-                    local isHorizontal = norm.z > 0.95
+
+                    local isHorizontal = math.abs(norm.z) > 0.45
                     local invalidSurface = Config.MaterialsBlacklist[material] or 
                                             IsEntityAVehicle(entity) or 
                                             (IsEntityAnObject(entity) and not Config.PlaceOnObjects) or 
-                                            (isHorizontal and not Config.PlaceOnFloor)
+                                            isHorizontal
 
                     -- Limit height
                     if coords.z > pcoords.z + Config.MaxPlaceHeight then
@@ -194,7 +236,7 @@ function Spycam.StartPlacement()
                     end
 
                     SetEntityCoordsNoOffset(currentObject, coords.x, coords.y, coords.z)
-                    SetEntityRotation(currentObject, rotation.x, rotation.y, rotation.z + 180.0, 4)
+                    SetEntityRotation(currentObject, rotation.x, rotation.y, rotation.z, 4)
 
                     -- Place the spycam
                     if IsDisabledControlJustPressed(0, keys.place.button) then
@@ -202,7 +244,7 @@ function Spycam.StartPlacement()
                             QBCore.Functions.Notify(Lang:t('errors.invalid'), 'error', 7500)
                         else
                             placing = false
-                            Spycam.Add(currentObject, coords, vec3(rotation.x, rotation.y, rotation.z + 180.0), isHorizontal)
+                            Spycam.Place(currentObject, coords, rotation)
                         end
                     end                  
                 end
@@ -266,7 +308,7 @@ function Spycam.SelfDestruct(currentIndex, currentCam)
 
         QBCore.Functions.Notify(Lang:t('general.destroyed'), 'success')
         TriggerServerEvent('spycams:server:destroyed', currentCam.coords)
-        TriggerServerEvent('spycams:server:removed', true)
+        TriggerServerEvent('spycams:server:removed', currentCam.uuid, true)
 
         if currentIndex == Spycam.activeIndex then
             SetTimecycleModifier("CAMERA_secuirity_FUZZ")
@@ -277,7 +319,7 @@ function Spycam.SelfDestruct(currentIndex, currentCam)
 
         Wait(3000)
 
-        Spycam.Remove(currentCam.entity)
+        Spycam.Remove(currentCam.entity, currentCam.uuid)
 
         if #ActiveCams == 0 then
             Spycam.Disconnect()
@@ -300,9 +342,11 @@ function Camera.Activate()
     
     Config.OnEnterCam()
 
-    if not Spycam.Cam then
-        Spycam.Cam = CreateCamWithParams("DEFAULT_SCRIPTED_CAMERA", currentCam.coords, currentCam.startRotation, currentCam.currentZoom)
-    end
+    RenderScriptCams(false, false, 0, true, false)
+    DestroyCam(Spycam.Cam, true)
+    Spycam.Cam = CreateCamWithParams("DEFAULT_SCRIPTED_CAMERA", currentCam.coords, currentCam.startRotation, currentCam.currentZoom)
+
+    AttachCamToEntity(Spycam.Cam, currentCam.entity, 0.0, Config.CamOffset, 0.0, true)
 
     ClearFocus()
     SetCamActive(Spycam.Cam, true)
@@ -403,6 +447,7 @@ function Camera.Create()
                 if currentCam.inRange then
                     -- Camera movement controls
                     local camMoving = false
+
                     if IsDisabledControlPressed(0, keys.moveup.button) then
                         camMoving = true
                         currentCam.currentRotation.x = currentCam.currentRotation.x + Config.MoveStep
@@ -495,7 +540,7 @@ end
 --- Source: https://github.com/citizenfx/lua/blob/luaglm-dev/cfx/libs/scripts/examples/scripting_gta.lua
 function Raycast.SurfaceNormalToRotation(normal)
     local quat_eps = 1E-2
-    local surfaceFlip = quat(-90, glm_right)
+    local surfaceFlip = quat(-90.0, glm_right) * quat(180.0, glm_up)
     local q = nil
 
     if glm_approx(glm_abs(normal.z), 1.0, quat_eps) then
@@ -625,11 +670,22 @@ function Scaleform.SetButtonMessage(text)
     EndTextCommandScaleformString()
 end
 
+function generateUUID()
+    local template ='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+    return string.gsub(template, '[xy]', function (c)
+        local v = (c == 'x') and math.random(0, 0xf) or math.random(8, 0xb)
+        return string.format('%x', v)
+    end)
+end
+
 
 -- EVENT HANDLERS
 
 RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
     TriggerEvent('chat:addSuggestion', '/spycams:connect', 'Connect to deployed spy cameras', {})
+
+    -- Load saved cameras
+    Spycam.LoadCameras()
 end)
 
 RegisterNetEvent('spycams:client:place', function()
@@ -652,7 +708,7 @@ end)
 
 AddEventHandler("spycams:client:interact", function(data)
     if data.name == 'spycams:retrieve' then
-        Spycam.Retrieve(data.entity)
+        Spycam.Retrieve(data.entity, data.uuid)
     elseif data.name == 'spycams:connect' then
         Spycam.Connect()
     end
@@ -661,6 +717,15 @@ end)
 AddEventHandler('onResourceStop', function(res)
     if res ~= GetCurrentResourceName() then return end
     Spycam.Disconnect()
+
+    for i = 1, #ActiveCams do
+        local camEntity = ActiveCams[i].entity
+
+        if DoesEntityExist(camEntity) then
+            SetEntityAsMissionEntity(camEntity, true, true)
+            DeleteEntity(camEntity)
+        end
+    end
 end)
 
 
@@ -683,4 +748,26 @@ end)
 
 exports('Disconnect', function()
     return Spycam.Disconnect()
+end)
+
+
+RegisterCommand('spycams:clean', function()
+    local hashes = {
+        [joaat('prop_cs_tablet')] = true,
+        [joaat('prop_spycam')] = true
+    }
+
+    local objects = GetGamePool('CObject')
+    local hash = joaat('prop_spycam')
+    for i = 1, #objects do
+        if hashes[GetEntityModel(objects[i])] then
+            print(hashes[GetEntityModel(objects[i])])
+            SetEntityAsMissionEntity(objects[i], true, true)
+            DeleteEntity(objects[i])
+        end
+    end
+end)
+
+RegisterCommand('spycams:place', function()
+    Spycam.StartPlacement()
 end)
