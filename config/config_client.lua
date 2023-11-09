@@ -18,7 +18,6 @@ Config.PlaceOnObjects   = true              -- Allows spycams to be placed on ob
 Config.DrawOutline      = true              -- Draw outline during spy cam placement
 
 -- Camera
-Config.AllowRotation    = true              -- Enable the option to rotate the camera
 Config.ScreenEffect     = "heliGunCam"      -- Screen effect when viewing the camera
 Config.EffectStrength   = 1.0               -- The strenght of the ScreenEffect between 0.0 and 1.0
 Config.SignalDistance   = 100               -- Maximum distance in meters before signal loss occurs
@@ -48,16 +47,18 @@ Config.Controls = {
         ['mode']        = { key = 23,    enabled = true, label = Lang:t('controls.mode') },
         ['zoomin']      = { key = 96,    enabled = true, label = Lang:t('controls.zoomin') },
         ['zoomout']     = { key = 97,    enabled = true, label = Lang:t('controls.zoomout') },
-        ['moveright']   = { key = 35,    enabled = Config.AllowRotation, label = Lang:t('controls.moveright') },
-        ['movedown']    = { key = 33,    enabled = Config.AllowRotation, label = Lang:t('controls.movedown') },
-        ['moveleft']    = { key = 34,    enabled = Config.AllowRotation, label = Lang:t('controls.moveleft') },
-        ['moveup']      = { key = 32,    enabled = Config.AllowRotation, label = Lang:t('controls.moveup')},
-        ['next']        = { key = 175,    enabled = true, label = Lang:t('controls.next')},
-        ['prev']        = { key = 174,    enabled = true, label = Lang:t('controls.prev')},
+        ['moveright']   = { key = 35,    enabled = true, label = Lang:t('controls.moveright') },
+        ['movedown']    = { key = 33,    enabled = true, label = Lang:t('controls.movedown') },
+        ['moveleft']    = { key = 34,    enabled = true, label = Lang:t('controls.moveleft') },
+        ['moveup']      = { key = 32,    enabled = true, label = Lang:t('controls.moveup')},
+        ['next']        = { key = 175,   enabled = true, label = Lang:t('controls.next')},
+        ['prev']        = { key = 174,   enabled = true, label = Lang:t('controls.prev')},
     }    
 }
 
+-- Custom notifications
 Config.SendNotification = function(message, notificationType)
+    -- Example for QBCore
     exports['qb-core']:GetCoreObject().Functions.Notify(message, notificationType)
 end
 

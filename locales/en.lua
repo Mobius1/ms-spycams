@@ -15,8 +15,8 @@ local Translations = {
         movedown    = "Down",
         moveleft    = "Left",
         moveup      = "Up",
-        prev        = "Previous Cam",
-        next        = "Next Cam",
+        prev        = "Previous Camera",
+        next        = "Next Camera",
     },
     
     errors = {
@@ -27,7 +27,7 @@ local Translations = {
     },
 
     notifications = {
-        placed = 'Camera Placed'
+        placed = 'Camera Placed',
     },
 
     general = {

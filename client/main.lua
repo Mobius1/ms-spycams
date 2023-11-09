@@ -17,6 +17,7 @@ local SetEntityCoordsNoOffset = SetEntityCoordsNoOffset
 local IsDisabledControlPressed = IsDisabledControlPressed
 local IsPauseMenuActive = IsPauseMenuActive
 local currentObject
+local isViewing = false
 
 local ActiveCams = {}
 local Spycam = {}
@@ -50,7 +51,7 @@ function Spycam.LoadCameras()
     end)
 end
 
-function Spycam.Place(entity, coords, rotation)
+function Spycam.Place(coords, rotation)
     QBCore.Functions.TriggerCallback('spycams:server:canPlace', function(canPlace)
         if canPlace then
             local ped = PlayerPedId()
@@ -58,37 +59,23 @@ function Spycam.Place(entity, coords, rotation)
             local uuid = generateUUID()
         
             local animDict = 'weapons@projectile@sticky_bomb'
-            local animName = onFloor and 'plant_floor' or 'plant_vertical'
-        
-            SetEntityCoords(entity, coords.x, coords.y, coords.z)
-            SetEntityRotation(entity, rotation.x, rotation.y, rotation.z, 5)
-            FreezeEntityPosition(entity, true)
-            SetEntityCollision(entity, true, true)
-            SetEntityAlpha(entity, 0)
+            local animName = 'plant_vertical'
 
-            if Config.DrawOutline then
-                SetEntityDrawOutline(entity, false)
-            end
-        
             Streaming.RequestAnimDict(animDict)
         
             if #(coords.xy - pcoords.xy) > 1.0 then
-                TaskGoStraightToCoord(ped, coords, 1.0, 2000, GetEntityHeading(entity), 0.01)
+                TaskGoStraightToCoord(ped, coords, 1.0, 2000, rotation.z, 0.01)
                 repeat Wait(0) until IsEntityAtCoord(ped, coords.x, coords.y, coords.z, 1.0, 1.0, 1.0, 0, 1, 0)
                 ClearPedTasks(ped)
                 Wait(500)
             end
         
-            TaskTurnPedToFaceEntity(ped, entity, 500)
+            TaskTurnPedToFaceCoord(ped, coords.x, coords.y, coords.z, 500)
             TaskPlayAnim(ped, animDict, animName, 8.0, 8.0, -1, 0, 0, false, false, false)
             Wait(math.floor(GetAnimDuration(animDict, animName)*1000))
-            ResetEntityAlpha(entity)
             ClearPedTasks(ped)
 
-            Spycam.EnableInteraction(entity, uuid)
-            Spycam.Add(entity, coords, rotation, uuid)
-
-            TriggerServerEvent('spycams:server:placed', uuid, coords, rotation, onFloor)
+            TriggerServerEvent('spycams:server:placed', uuid, coords, rotation)
             Config.SendNotification(Lang:t('notifications.placed'), 'info')
         end
     end)
@@ -146,7 +133,7 @@ function Spycam.DisableInteraction(entity)
     end
 end
 
-function Spycam.Remove(entity, uuid)
+function Spycam.Remove(uuid)
     for i = #ActiveCams, 1, -1 do
         local cam = ActiveCams[i]
         if cam.uuid == uuid then
@@ -167,8 +154,8 @@ function Spycam.Remove(entity, uuid)
     end
 end
 
-function Spycam.Retrieve(entity, uuid)
-    Spycam.Remove(entity, uuid)
+function Spycam.Retrieve(uuid)
+    Spycam.Remove(uuid)
     TriggerServerEvent('spycams:server:removed', uuid, false)
 end
 
@@ -245,7 +232,10 @@ function Spycam.StartPlacement()
                             QBCore.Functions.Notify(Lang:t('errors.invalid'), 'error', 7500)
                         else
                             placing = false
-                            Spycam.Place(currentObject, coords, rotation)
+                            SetEntityAsMissionEntity(currentObject, true, true)
+                            DeleteEntity(currentObject)
+                        
+                            Spycam.Place(coords, rotation)
                         end
                     end                  
                 end
@@ -283,6 +273,8 @@ function Spycam.Connect()
     SetEntityAsMissionEntity(Spycam.Tablet, true, true)
 
     Camera.Create()
+
+    isViewing = true
 end
 
 function Spycam.Disconnect()
@@ -295,6 +287,8 @@ function Spycam.Disconnect()
     end
 
     ClearPedTasks(PlayerPedId())
+
+    isViewing = false
 end
 
 function Spycam.SelfDestruct(currentIndex, currentCam)
@@ -308,26 +302,14 @@ function Spycam.SelfDestruct(currentIndex, currentCam)
         currentCam.destroyed = true
 
         QBCore.Functions.Notify(Lang:t('general.destroyed'), 'success')
-        TriggerServerEvent('spycams:server:destroyed', currentCam.coords)
+        TriggerServerEvent('spycams:server:destroyed', currentCam.uuid, currentCam.coords)
         TriggerServerEvent('spycams:server:removed', currentCam.uuid, true)
 
-        if currentIndex == Spycam.activeIndex then
+        if currentIndex == Spycam.activeIndex and isViewing then
             SetTimecycleModifier("CAMERA_secuirity_FUZZ")
             SetTimecycleModifierStrength(1.0)
             SetExtraTimecycleModifier("NG_blackout")
             SetExtraTimecycleModifierStrength(1.0)
-        end 
-
-        Wait(3000)
-
-        Spycam.Remove(currentCam.entity, currentCam.uuid)
-
-        if #ActiveCams == 0 then
-            Spycam.Disconnect()
-            Spycam.activeIndex = 1
-        else
-            Spycam.activeIndex = 1
-            Camera.Activate()
         end
     end)
 end
@@ -419,9 +401,7 @@ function Camera.Create()
                 DisableAllControlActions(0)
 
                 -- Display instructional buttons
-                if not takingPhoto then
-                    DrawScaleformMovieFullscreen(buttons, 255, 255, 255, 255, 0)
-                end
+                DrawScaleformMovieFullscreen(buttons, 255, 255, 255, 255, 0)
 
                 if not currentCam.inRange then
                     DrawMessage(0.5, 0.5, 0.8, 255, 255, 255, 255, Lang:t('general.nosignal'))
@@ -488,7 +468,7 @@ function Camera.Create()
                         currentCam.currentZoom = currentCam.currentZoom + Config.ZoomStep
                         currentCam.currentZoom = math.min(currentCam.currentZoom, Config.MaxFOV)
                         SetCamFov(Spycam.Cam, currentCam.currentZoom)
-                    end             
+                    end          
 
                     -- Camera vision mode controls
                     if Camera.IsControlJustPressed(keys.mode) then
@@ -686,12 +666,12 @@ end
 
 -- EVENT HANDLERS
 
-RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
+-- RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
     TriggerEvent('chat:addSuggestion', '/spycams:connect', 'Connect to deployed spy cameras', {})
 
     -- Load saved cameras
     Spycam.LoadCameras()
-end)
+-- end)
 
 RegisterNetEvent('spycams:client:place', function()
     Spycam.StartPlacement()
@@ -705,15 +685,42 @@ RegisterNetEvent('spycams:client:diconnect', function()
     Spycam.Disconnect()
 end)
 
-RegisterNetEvent('spycams:client:destroyed', function(coords)
+RegisterNetEvent('spycams:client:destroyed', function(uuid, coords)
     Streaming.RequestPtfx('scr_xs_props')
     UseParticleFxAssetNextCall('scr_xs_props')
-    StartParticleFxNonLoopedAtCoord('scr_xs_ball_explosion', coords, 0.0, 0.0, 0.0, 0.6, false, false, false, false)
+    StartParticleFxNonLoopedAtCoord('scr_xs_ball_explosion', coords, 0.0, 0.0, 0.0, 0.4, false, false, false)
+end)
+
+RegisterNetEvent('spycams:client:placed', function(playerId, uuid, coords, rotation)
+    local modelHash = joaat(Config.Model)
+    Streaming.RequestModel(modelHash)
+    local camEntity = CreateObject(modelHash, coords, true, true, true)
+    
+    FreezeEntityPosition(camEntity, true)
+    SetEntityCoords(camEntity, coords.x, coords.y, coords.z)
+    SetEntityRotation(camEntity, rotation.x, rotation.y, rotation.z, 5)
+
+    local rotation = GetEntityRotation(camEntity, 0)
+    
+    Spycam.EnableInteraction(camEntity, uuid)
+    Spycam.Add(camEntity, coords, rotation, uuid)
+end)
+
+RegisterNetEvent('spycams:client:remove', function(playerId, uuid)
+    Spycam.Remove(uuid)
+
+    if #ActiveCams == 0 then
+        Spycam.Disconnect()
+        Spycam.activeIndex = 1
+    else
+        Spycam.activeIndex = 1
+        Camera.Activate()
+    end
 end)
 
 AddEventHandler("spycams:client:interact", function(data)
     if data.name == 'spycams:retrieve' then
-        Spycam.Retrieve(data.entity, data.uuid)
+        Spycam.Retrieve(data.uuid)
     elseif data.name == 'spycams:connect' then
         Spycam.Connect()
     end

@@ -98,10 +98,9 @@ RegisterNetEvent('spycams:server:placed', function(uuid, coords, rotation, onFlo
 
         MySQL.insert.await('INSERT INTO `spycams` (citizenid, uuid, coords, rotation) VALUES (?, ?, ?, ?)', {
             PlayerData.citizenid, uuid, pos, rot
-        })        
-
-        TriggerEvent('ms-spycams:server:placed', playerId)
-        TriggerClientEvent('ms-spycams:client:placed', -1, playerId)
+        })   
+        
+        TriggerClientEvent('spycams:client:placed', -1, playerId, uuid, coords, rotation)
 
         if string.len(Config.Hook) > 0 then
             SendLog(GetPlayerName(playerId), PlayerData.citizenid, coords, uuid)
@@ -118,23 +117,19 @@ RegisterNetEvent('spycams:server:removed', function(uuid, destroyed)
     if destroyed then
         if Spycams[playerId] > 0 then
             Spycams[playerId] = Spycams[playerId] - 1
-
-            TriggerEvent('ms-spycams:server:destroyed', playerId)
-            TriggerClientEvent('ms-spycams:client:destroyed', -1, playerId)
         end
     else
         if Player.Functions.AddItem(Config.SpycamItem, 1) then
             Spycams[playerId] = Spycams[playerId] - 1
             TriggerClientEvent('inventory:client:ItemBox', playerId, QBCore.Shared.Items[Config.SpycamItem], 'add', 1)
-
-            TriggerEvent('ms-spycams:server:removed', playerId)
-            TriggerClientEvent('ms-spycams:client:removed', -1, playerId)
         end
     end
+
+    TriggerClientEvent('spycams:client:remove', -1, playerId, uuid)
 
     MySQL.single.await('DELETE FROM spycams WHERE uuid = ?', { uuid })
 end)
 
-RegisterNetEvent('spycams:server:destroyed', function(coords)
-    TriggerClientEvent('spycams:client:destroyed', -1, coords)
+RegisterNetEvent('spycams:server:destroyed', function(uuid, coords)
+    TriggerClientEvent('spycams:client:destroyed', -1, uuid, coords)
 end)
