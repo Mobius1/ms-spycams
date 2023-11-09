@@ -17,7 +17,7 @@
 * Restart you server
 
 ## Upgrading from v0.2.0
-The need for streaming a custom `prop_spycam` model was removed in v0.3.0 therefore you must delete the `stream` folder and it's contents otherwise the spycam will be rotated incorrectly!
+The need for streaming a custom `prop_spycam` model was removed in v0.3.0 therefore you must delete the `stream` folder and it's contents otherwise the spycam will be rotated incorrectly. Also, as of v0.4.0, you need to import the `spycams.sql` in to your database.
 
 
 ## Usage
@@ -25,7 +25,7 @@ The need for streaming a custom `prop_spycam` model was removed in v0.3.0 theref
 * Use the `spycam_tablet` item to connect to and control your deployed spy camera(s)
 * Retrieve a spy camera by targeting it
 
-If you don't want to utilise the `spycam_tablet` item to connect to the deployed spy cameras, you can either use the command `spycams:connect` or utilise the following exports from your scripts:
+If you don't want to utilise the `spycam_tablet` item to connect to the deployed spy cameras, you can either use the command `spycams:connect` or utilise the following client-side exports from your scripts:
 
 * `exports['ms-spycams']:Connect()` - Connects to deployed spy cameras
 * `exports['ms-spycams']:Disconnect()` - Disconnects from deployed spy cameras
